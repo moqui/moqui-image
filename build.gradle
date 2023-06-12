@@ -39,7 +39,7 @@ dependencyUpdates.resolutionStrategy = { componentSelection { rules -> rules.all
 
 repositories {
     flatDir name: 'localLib', dirs: frameworkDir.absolutePath + '/lib'
-    flatDir name: 'librepo', dirs: projectDir.absolutePath + '/librepo'
+    flatDir name: 'fop_librepo', dirs: projectDir.parentFile.absolutePath + '/moqui-fop/librepo'
     mavenCentral()
 }
 
@@ -49,6 +49,7 @@ tasks.withType(GroovyCompile) { options.compilerArgs << "-proc:none" }
 
 dependencies {
     implementation project(':framework')
+    implementation project(':runtime:component:moqui-fop')
 
     // https://mvnrepository.com/artifact/com.twelvemonkeys.imageio
     implementation 'com.twelvemonkeys.imageio:imageio-jpeg:3.9.3'
@@ -56,7 +57,7 @@ dependencies {
     implementation 'com.twelvemonkeys.imageio:imageio-tiff:3.9.3'
     implementation 'com.twelvemonkeys.imageio:imageio-webp:3.9.3'
     // https://mvnrepository.com/artifact/org.apache.xmlgraphics/batik-transcoder
-    implementation 'org.apache.xmlgraphics:batik-transcoder:1.16'
+    // included in moqui-fop: implementation 'org.apache.xmlgraphics:batik-transcoder:1.16'
 }
 
 // by default the Java plugin runs test on build, change to not do that (only run test if explicit task)
@@ -66,14 +67,19 @@ check.dependsOn.clear()
 task cleanLib(type: Delete) { delete fileTree(dir: projectDir.absolutePath+'/lib', include: '*') }
 clean.dependsOn cleanLib
 
+/* does not need a jar file for now (all in services):
 jar {
     destinationDirectory = file(projectDir.absolutePath + '/lib')
     archiveBaseName = jarBaseName
 }
+*/
+
 task copyDependencies { doLast {
     // logger.lifecycle("configurations.runtimeClasspath: ${configurations.runtimeClasspath.files({true}).join('\n')}\n\n")
     // logger.lifecycle("project(':framework').configurations.runtimeClasspath: ${project(':framework').configurations.runtimeClasspath.files({true}).join('\n')}")
-    copy { from (configurations.runtimeClasspath - project(':framework').configurations.runtimeClasspath - project(':framework').jar.archivePath)
+    copy { from (configurations.runtimeClasspath - project(':framework').configurations.runtimeClasspath - project(':framework').jar.archivePath
+            - project(':runtime:component:moqui-fop').configurations.runtimeClasspath
+            - project(':runtime:component:moqui-fop').jar.archivePath)
         into file(projectDir.absolutePath + '/lib') }
 } }
 copyDependencies.dependsOn cleanLib
