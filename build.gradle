@@ -77,10 +77,14 @@ jar {
 task copyDependencies { doLast {
     // logger.lifecycle("configurations.runtimeClasspath: ${configurations.runtimeClasspath.files({true}).join('\n')}\n\n")
     // logger.lifecycle("project(':framework').configurations.runtimeClasspath: ${project(':framework').configurations.runtimeClasspath.files({true}).join('\n')}")
-    copy { from (configurations.runtimeClasspath - project(':framework').configurations.runtimeClasspath - project(':framework').jar.archivePath
-            - project(':runtime:component:moqui-fop').configurations.runtimeClasspath
-            - project(':runtime:component:moqui-fop').jar.archivePath)
-        into file(projectDir.absolutePath + '/lib') }
+    copy {
+        from (configurations.runtimeClasspath -
+              project(':framework').configurations.runtimeClasspath -
+              project(':framework').tasks.jar.archiveFile.get().asFile -
+              project(':runtime:component:moqui-fop').configurations.runtimeClasspath -
+              project(':runtime:component:moqui-fop').tasks.jar.archiveFile.get().asFile)
+        into file(projectDir.absolutePath + '/lib')
+    }
 } }
 copyDependencies.dependsOn cleanLib
 jar.dependsOn copyDependencies
